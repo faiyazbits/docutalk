@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+  # Chroma Vector Database
+  chromadb:
+    image: chromadb/chroma:latest
+    container_name: docutalk-chromadb-prod
+    ports:
+      - "8000:8000"
+    volumes:
+      - chroma-data:/chroma/chroma
+    environment:
+      - IS_PERSISTENT=TRUE
+      - ANONYMIZED_TELEMETRY=FALSE
+    restart: always
+    networks:
+      - docutalk-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/heartbeat"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Node.js Server (Production)
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+      target: production
+    container_name: docutalk-server-prod
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - CHROMA_URL=http://chromadb:8000
+      - CHROMA_COLLECTION=rag-collection
+    env_file:
+      - ./server/.env
+    depends_on:
+      chromadb:
+        condition: service_healthy
+    restart: always
+    networks:
+      - docutalk-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  chroma-data:
+    driver: local
+
+networks:
+  docutalk-network:
+    driver: bridge

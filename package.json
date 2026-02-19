@@ -1,0 +1,15 @@
+{
+  "name": "docutalk-workspace",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "client": "pnpm --filter client",
+    "server": "pnpm --filter server",
+    "dev:client": "pnpm --filter client dev",
+    "dev:server": "pnpm --filter server dev",
+    "build:client": "pnpm --filter client build",
+    "build:server": "pnpm --filter server build",
+    "dev": "pnpm --parallel --filter client --filter server dev",
+    "clean:chroma": "pnpm --filter server clean:chroma"
+  }
+}
